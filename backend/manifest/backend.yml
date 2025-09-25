@@ -1,0 +1,36 @@
+name: MarketApp
+description: A simple marketplace application for users to sell products.
+
+entities:
+  User:
+    authenticable: true
+    properties:
+      - name
+      - { name: email, type: email, validation: { required: true, unique: true } }
+      - { name: avatar, type: image, options: { sizes: { small: { width: 100, height: 100 } } } }
+      - { name: role, type: choice, options: { values: [admin, user], default: user } }
+    access_policies:
+      - role: admin
+        permissions: [create, read, update, delete]
+      - role: user
+        permissions: [read, update]
+        condition: "user.id === id"
+
+  Product:
+    properties:
+      - { name: name, validation: { required: true } }
+      - { name: description, type: text }
+      - { name: price, type: money, options: { currency: 'USD' }, validation: { required: true, numericality: { greater_than_or_equal_to: 0 } } }
+      - { name: image, type: image, options: { sizes: { thumbnail: { width: 400, height: 400, fit: cover } } } }
+      - { name: status, type: choice, options: { values: ['For Sale', 'Sold'], default: 'For Sale' } }
+    belongsTo:
+      - { name: seller, entity: User }
+    access_policies:
+      - role: admin
+        permissions: [create, read, update, delete]
+      - role: user
+        permissions: [create, read, update, delete]
+        condition: "user.id === seller.id"
+      - role: public
+        permissions: [read]
+        condition: "status === 'For Sale'"
